@@ -1,5 +1,11 @@
 tnt = {}
 
+local tnt_max_height = tonumber(minetest.settings:get("tnt_max_height"))
+if not tnt_max_height then
+  tnt_max_height = -33000
+  minetest.settings:set("tnt_max_height", tostring(tnt_max_height))
+end
+
 -- Default to enabled when in singleplayer
 local enable_tnt = minetest.settings:get_bool("enable_tnt")
 if enable_tnt == nil then
@@ -326,6 +332,8 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast, owne
 	local on_construct_queue = {}
 	basic_flame_on_construct = minetest.registered_nodes["fire:basic_flame"].on_construct
 
+  local destroyable = p1.y < tnt_max_height
+
 	local c_fire = minetest.get_content_id("fire:basic_flame")
 	for z = -radius, radius do
 	for y = -radius, radius do
@@ -335,7 +343,7 @@ local function tnt_explode(pos, radius, ignore_protection, ignore_on_blast, owne
 		if (radius * radius) / (r * r) >= (pr:next(80, 125) / 100) then
 			local cid = data[vi]
 			local p = {x = pos.x + x, y = pos.y + y, z = pos.z + z}
-			if cid ~= c_air then
+			if destroyable and cid ~= c_air then
 				data[vi] = destroy(drops, p, cid, c_air, c_fire,
 					on_blast_queue, on_construct_queue,
 					ignore_protection, ignore_on_blast, owner)
